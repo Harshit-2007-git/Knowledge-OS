@@ -1,0 +1,30 @@
+# Backend
+backend/.env
+backend/venv/
+backend/__pycache__/
+backend/uploads/
+backend/chroma_data/
+backend/knowledge_os.db
+backend/.pytest_cache/
+
+# Python
+*.pyc
+__pycache__/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.production.local
+
+# Root node modules
+node_modules/
+
+# General
+.DS_Store
+*.log
+.env
+*.env
+backend/.env
+frontend/.env.local
