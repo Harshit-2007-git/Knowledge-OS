@@ -1,11 +1,13 @@
 import api from "../api";
 
 export interface SearchResult {
+  chunk_id: string;
   document_id: string;
-  filename: string;
+  document_name: string;
   content: string;
-  score: number;
-  chunk_index: number;
+  relevance_score: number;
+  page_number?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SearchResponse {
@@ -17,7 +19,7 @@ export interface SearchResponse {
 
 export interface SearchRequest {
   query: string;
-  workspace_id?: string;
+  workspace_id: string;
   top_k?: number;
 }
 

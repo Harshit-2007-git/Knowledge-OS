@@ -1,11 +1,15 @@
 """
 ChromaDB vector store abstraction.
 
-Provides a clean interface for storing and querying document embeddings.
+Uses PersistentClient (embedded mode) — no separate ChromaDB server needed.
+Data is saved to CHROMA_PERSIST_DIR on disk and survives restarts.
+
+For production (Railway): swap to HttpClient pointing at a Railway ChromaDB service.
 """
 
 import logging
 from typing import Optional
+# pyrefly: ignore [missing-import]
 import chromadb
 
 from app.config import settings
@@ -13,28 +17,26 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 # Module-level client singleton
-_client: Optional[chromadb.HttpClient] = None
+_client: Optional[chromadb.PersistentClient] = None
 
 
-def get_chroma_client() -> chromadb.HttpClient:
-    """Get or create a ChromaDB HTTP client."""
+def get_chroma_client() -> chromadb.PersistentClient:
+    """Get or create an embedded ChromaDB persistent client."""
     global _client
     if _client is None:
-        _client = chromadb.HttpClient(
-            host=settings.CHROMA_HOST,
-            port=settings.CHROMA_PORT,
+        _client = chromadb.PersistentClient(
+            path=settings.CHROMA_PERSIST_DIR,
         )
-        logger.info("Connected to ChromaDB at %s:%s", settings.CHROMA_HOST, settings.CHROMA_PORT)
+        logger.info("ChromaDB embedded client ready at '%s'", settings.CHROMA_PERSIST_DIR)
     return _client
 
 
 def get_or_create_collection(
     workspace_id: str,
-    client: Optional[chromadb.HttpClient] = None,
+    client: Optional[chromadb.PersistentClient] = None,
 ) -> chromadb.Collection:
     """
     Get or create a ChromaDB collection for a workspace.
-
     Each workspace gets its own collection for tenant isolation.
     """
     if client is None:
@@ -55,16 +57,7 @@ def add_embeddings(
     documents: list[str],
     metadatas: Optional[list[dict]] = None,
 ) -> None:
-    """
-    Add document chunk embeddings to the workspace collection.
-
-    Args:
-        workspace_id: Target workspace.
-        ids: Unique IDs for each embedding (typically chunk IDs).
-        embeddings: Embedding vectors.
-        documents: Original text for each embedding.
-        metadatas: Optional metadata dicts for filtering.
-    """
+    """Add document chunk embeddings to the workspace collection."""
     collection = get_or_create_collection(workspace_id)
     collection.add(
         ids=ids,
@@ -81,20 +74,8 @@ def query_embeddings(
     top_k: int = 10,
     filter_metadata: Optional[dict] = None,
 ) -> dict:
-    """
-    Query the workspace collection for similar chunks.
-
-    Args:
-        workspace_id: Target workspace.
-        query_embedding: Query vector.
-        top_k: Number of results.
-        filter_metadata: Optional ChromaDB where filter.
-
-    Returns:
-        ChromaDB query results dict with ids, distances, documents, metadatas.
-    """
+    """Query the workspace collection for similar chunks."""
     collection = get_or_create_collection(workspace_id)
-
     query_params = {
         "query_embeddings": [query_embedding],
         "n_results": top_k,
@@ -102,9 +83,7 @@ def query_embeddings(
     }
     if filter_metadata:
         query_params["where"] = filter_metadata
-
-    results = collection.query(**query_params)
-    return results
+    return collection.query(**query_params)
 
 
 def delete_embeddings(workspace_id: str, ids: list[str]) -> None:

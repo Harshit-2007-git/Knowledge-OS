@@ -63,8 +63,8 @@ export default function WorkspacesPage() {
     onError: (err: any) => {
       console.error("Upload failed:", err);
       const detail = err.response?.data?.detail;
-      const message = typeof detail === "string" 
-        ? detail 
+      const message = typeof detail === "string"
+        ? detail
         : JSON.stringify(detail) || "Failed to upload document. Please check file size and type.";
       alert(message);
     }
@@ -124,14 +124,14 @@ export default function WorkspacesPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in flex flex-col md:flex-row gap-6 h-[calc(100vh-8rem)]">
-      
+
       {/* Sidebar: Workspaces List */}
       <div className="w-full md:w-1/3 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold tracking-tight">Workspaces</h1>
           </div>
-          
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 gap-2">
               <Plus className="w-4 h-4" />
@@ -147,20 +147,20 @@ export default function WorkspacesPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input 
-                    id="name" 
-                    value={newWorkspaceName} 
-                    onChange={(e) => setNewWorkspaceName(e.target.value)} 
-                    placeholder="e.g. HR Policies 2024" 
+                  <Input
+                    id="name"
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
+                    placeholder="e.g. HR Policies 2024"
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="desc">Description</Label>
-                  <Input 
-                    id="desc" 
-                    value={newWorkspaceDesc} 
-                    onChange={(e) => setNewWorkspaceDesc(e.target.value)} 
-                    placeholder="Optional details" 
+                  <Input
+                    id="desc"
+                    value={newWorkspaceDesc}
+                    onChange={(e) => setNewWorkspaceDesc(e.target.value)}
+                    placeholder="Optional details"
                   />
                 </div>
               </div>
@@ -185,8 +185,8 @@ export default function WorkspacesPage() {
             </Card>
           ) : (
             workspaces?.map((ws) => (
-              <Card 
-                key={ws.id} 
+              <Card
+                key={ws.id}
                 className={`cursor-pointer transition-all group ${selectedWorkspace?.id === ws.id ? 'border-primary ring-1 ring-primary/50 bg-primary/5' : 'hover:border-primary/50'}`}
                 onClick={() => setSelectedWorkspace(ws)}
               >
@@ -198,9 +198,9 @@ export default function WorkspacesPage() {
                     </CardTitle>
                     {ws.description && <CardDescription className="text-xs line-clamp-1">{ws.description}</CardDescription>}
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => handleDeleteWorkspace(e, ws.id)}
                   >
@@ -217,9 +217,9 @@ export default function WorkspacesPage() {
       <div className="w-full md:w-2/3 border rounded-xl bg-card overflow-hidden flex flex-col">
         {!selectedWorkspace ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-             <FileText className="w-12 h-12 mb-4 opacity-20" />
-             <h3 className="text-lg font-medium text-foreground">Select a workspace</h3>
-             <p className="text-sm mt-1">Choose a workspace from the sidebar to manage its documents.</p>
+            <FileText className="w-12 h-12 mb-4 opacity-20" />
+            <h3 className="text-lg font-medium text-foreground">Select a workspace</h3>
+            <p className="text-sm mt-1">Choose a workspace from the sidebar to manage its documents.</p>
           </div>
         ) : (
           <>
@@ -229,7 +229,7 @@ export default function WorkspacesPage() {
                 <p className="text-sm text-muted-foreground">{documentData?.total || 0} documents</p>
               </div>
               <div className="flex items-center gap-3">
-                <Link 
+                <Link
                   href={`/workspaces/${selectedWorkspace.id}/chat`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
                 >
@@ -255,7 +255,7 @@ export default function WorkspacesPage() {
 
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
               {loadingDocs ? (
-                 <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+                <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
               ) : documentData?.documents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border/50 rounded-xl bg-background/50">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -263,7 +263,7 @@ export default function WorkspacesPage() {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Upload your first document</h3>
                   <p className="text-sm text-muted-foreground max-w-sm">
-                    Drag and drop a PDF, TXT, or Markdown file here, or click the upload button above.
+                    Drag and drop a PDF, TXT, Markdown, or Word (.docx) file here, or click the upload button above.
                   </p>
                 </div>
               ) : (
@@ -292,9 +292,9 @@ export default function WorkspacesPage() {
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           {getStatusBadge(doc.status)}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={() => handleFileDelete(doc.id)}
                             disabled={deleteDocMutation.isPending}

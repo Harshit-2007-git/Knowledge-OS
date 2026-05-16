@@ -3,7 +3,7 @@ Chat and conversation schemas.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from pydantic import BaseModel, Field
 
 
@@ -17,12 +17,17 @@ class ChatRequest(BaseModel):
 
 
 class CitationSchema(BaseModel):
-    chunk_id: str
-    document_id: str
-    document_name: str
-    content: str
+    # All fields optional so old/malformed citation data never crashes the API
+    chunk_id: Optional[str] = None
+    document_id: Optional[str] = None
+    document_name: Optional[str] = None
+    content: Optional[str] = None
     page_number: Optional[int] = None
-    relevance_score: float
+    relevance_score: Optional[float] = None
+    # Catch-all for any extra fields stored by rag_service
+    metadata: Optional[dict] = None
+
+    model_config = {"extra": "allow", "from_attributes": True}
 
 
 class MessageResponse(BaseModel):
@@ -30,7 +35,7 @@ class MessageResponse(BaseModel):
     role: str
     content: str
     message_index: int
-    citations: Optional[list[CitationSchema]] = None
+    citations: Optional[list[Any]] = None   # Any = won't crash on any shape
     model_name: Optional[str] = None
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None

@@ -29,3 +29,13 @@ async def update_profile(
     service = UserService(db)
     updated = await service.update_user(current_user.id, data)
     return updated
+
+
+@router.delete("/me", status_code=204)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Permanently delete the authenticated user's account and all data."""
+    service = UserService(db)
+    await service.delete_user(current_user.id)

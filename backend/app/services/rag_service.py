@@ -1,13 +1,12 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-import uuid
 import datetime
 
 from app.db.models.conversation import Conversation, Message
 from app.vectorstore.chroma_client import get_or_create_collection as get_collection
 from app.ml.embeddings import get_embedding_model
-from app.ml.llm import get_llm_client          # ← uses factory, picks Groq or Ollama from config
+from app.ml.llm import get_llm_client
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +14,14 @@ logger = logging.getLogger(__name__)
 class RAGService:
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.llm = get_llm_client()            # ← Groq by default (LLM_PROVIDER=groq in .env)
+        self.llm = get_llm_client()
 
     async def get_or_create_conversation(
         self,
         workspace_id: str,
         title: str = "New Conversation",
         conversation_id: str = None,
+        user_id: str = None,
     ) -> Conversation:
         if conversation_id:
             result = await self.db.execute(
@@ -34,7 +34,7 @@ class RAGService:
         conv = Conversation(
             title=title,
             workspace_id=workspace_id,
-            user_id="anonymous",
+            user_id=user_id,  # always use the real user id, never "anonymous"
         )
         self.db.add(conv)
         await self.db.flush()
@@ -43,7 +43,6 @@ class RAGService:
     async def retrieve_context(
         self, workspace_id: str, query: str, top_k: int = 5
     ) -> list[dict]:
-        """Search ChromaDB for relevant chunks."""
         collection = get_collection(workspace_id)
         if not collection:
             return []
@@ -82,18 +81,15 @@ class RAGService:
         model: str = None,
         user_id: str = None,
     ) -> dict:
-        """Process a chat message, retrieve context, and generate response."""
-
         # 1. Retrieve context
         contexts = await self.retrieve_context(workspace_id, query)
         context_text = "\n\n---\n\n".join([c["text"] for c in contexts])
 
-        # 2. Prepare conversation
+        # 2. Prepare conversation — pass user_id directly
         conv = await self.get_or_create_conversation(
-            workspace_id, title=query[:50] + "...", conversation_id=conversation_id
+            workspace_id, title=query[:50] + "...",
+            conversation_id=conversation_id, user_id=user_id
         )
-        if user_id:
-            conv.user_id = user_id
 
         # 3. Store user message
         result = await self.db.execute(
@@ -126,7 +122,7 @@ class RAGService:
             {"role": "user", "content": query},
         ]
 
-        # 5. Generate LLM response (model arg ignored for Groq — uses GROQ_MODEL from config)
+        # 5. Generate LLM response
         llm_response = await self.llm.generate_chat(messages)
 
         # 6. Store AI message
@@ -136,7 +132,14 @@ class RAGService:
             content=llm_response,
             message_index=next_idx + 1,
             model_name=getattr(self.llm, "default_model", model or "groq"),
-            citations=[{"metadata": c["metadata"]} for c in contexts] if contexts else None,
+            citations=[{
+                "chunk_id": c["metadata"].get("chunk_id", ""),
+                "document_id": c["metadata"].get("document_id", ""),
+                "document_name": c["metadata"].get("document_name", ""),
+                "content": c.get("text", ""),
+                "relevance_score": float(1 - c.get("distance", 0)),
+                "metadata": c["metadata"],
+            } for c in contexts] if contexts else None,
         )
         self.db.add(ai_msg)
         await self.db.commit()
@@ -165,19 +168,17 @@ class RAGService:
         model: str = None,
         user_id: str = None,
     ):
-        """Process a chat message, retrieve context, and stream response tokens."""
         import json
 
         # 1. Retrieve context
         contexts = await self.retrieve_context(workspace_id, query)
         context_text = "\n\n---\n\n".join([c["text"] for c in contexts])
 
-        # 2. Prepare conversation
+        # 2. Prepare conversation — pass user_id directly
         conv = await self.get_or_create_conversation(
-            workspace_id, title=query[:50] + "...", conversation_id=conversation_id
+            workspace_id, title=query[:50] + "...",
+            conversation_id=conversation_id, user_id=user_id
         )
-        if user_id:
-            conv.user_id = user_id
 
         # 3. Store user message
         result = await self.db.execute(
@@ -211,7 +212,6 @@ class RAGService:
             {"role": "user", "content": query},
         ]
 
-        # Yield metadata and start events
         yield f"data: {json.dumps({'type': 'metadata', 'conversation_id': conv.id})}\n\n"
         yield f"data: {json.dumps({'type': 'start'})}\n\n"
 
@@ -234,7 +234,14 @@ class RAGService:
             content=full_response,
             message_index=next_idx + 1,
             model_name=getattr(self.llm, "default_model", model or "groq"),
-            citations=[{"metadata": c["metadata"]} for c in contexts] if contexts else None,
+            citations=[{
+                "chunk_id": c["metadata"].get("chunk_id", ""),
+                "document_id": c["metadata"].get("document_id", ""),
+                "document_name": c["metadata"].get("document_name", ""),
+                "content": c.get("text", ""),
+                "relevance_score": float(1 - c.get("distance", 0)),
+                "metadata": c["metadata"],
+            } for c in contexts] if contexts else None,
         )
         self.db.add(ai_msg)
         await self.db.commit()

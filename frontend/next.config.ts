@@ -7,11 +7,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    turbo: {
-      root: "./",
-    },
-  },
+  devIndicators: false,
 };
 
 export default nextConfig;

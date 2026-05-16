@@ -14,10 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Knowledge OS — Enterprise AI Platform",
+  title: "Aethel AI — Enterprise RAG Platform",
   description:
-    "Enterprise AI Knowledge Management Platform. Semantic search, RAG-powered chat, document intelligence, and more.",
-  keywords: ["AI", "knowledge management", "RAG", "semantic search", "enterprise"],
+    "Aethel AI: Enterprise RAG Platform. Semantic search, RAG-powered chat, document intelligence, and more.",
+  keywords: ["AI", "RAG", "semantic search", "enterprise", "Aethel"],
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

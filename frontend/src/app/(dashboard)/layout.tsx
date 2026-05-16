@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 
@@ -8,6 +10,13 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { fetchUser, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    // Always refresh user profile when dashboard loads
+    fetchUser();
+  }, []);
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />

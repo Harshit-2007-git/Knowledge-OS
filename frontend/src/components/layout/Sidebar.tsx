@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -12,7 +13,6 @@ import {
   Settings,
   Upload,
   BarChart3,
-  Brain,
   ChevronLeft,
   LogOut,
 } from "lucide-react";
@@ -35,9 +35,21 @@ const secondaryItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
 
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  const avatarEmoji = user?.avatar_url?.startsWith("emoji:")
+    ? user.avatar_url.split(":")[1]
+    : null;
+  const avatarGradient = user?.avatar_url?.startsWith("emoji:")
+    ? user.avatar_url.split(":")[2]
+    : null;
   const initials = user?.full_name
     ?.split(" ")
     .map((n) => n[0])
@@ -54,15 +66,15 @@ export function Sidebar() {
     >
       {/* Logo / Brand */}
       <div className="flex items-center gap-3 px-4 h-16 shrink-0">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground animate-pulse-glow">
-          <Brain className="w-5 h-5" />
+        <div className="flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden animate-pulse-glow shrink-0">
+          <Image src="/logo.png" alt="Aethel" width={36} height={36} className="object-cover" />
         </div>
         {!collapsed && (
           <div className="animate-fade-in">
             <h1 className="text-sm font-bold tracking-tight gradient-text">
-              Knowledge OS
+              Aethel AI
             </h1>
-            <p className="text-[10px] text-muted-foreground">Enterprise AI Platform</p>
+            <p className="text-[10px] text-muted-foreground">Enterprise RAG Platform</p>
           </div>
         )}
         <Button
@@ -136,17 +148,24 @@ export function Sidebar() {
       <Separator className="opacity-50" />
 
       {/* User Section */}
-      <div className="px-3 py-3">
-        <div
+      <div className="px-3 py-3 space-y-1">
+        <Link
+          href="/profile"
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg",
             "hover:bg-accent/30 transition-colors cursor-pointer"
           )}
         >
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
-              {initials}
-            </AvatarFallback>
+            {avatarEmoji ? (
+              <div className={`h-8 w-8 rounded-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-base`}>
+                {avatarEmoji}
+              </div>
+            ) : (
+              <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                {initials}
+              </AvatarFallback>
+            )}
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0 animate-fade-in">
@@ -154,17 +173,24 @@ export function Sidebar() {
               <p className="text-[11px] text-muted-foreground truncate">{user?.email || ""}</p>
             </div>
           )}
-          {!collapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-              onClick={logout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        </Link>
+        {!collapsed && (
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            <span>Sign out</span>
+          </button>
+        )}
+        {collapsed && (
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </aside>
   );

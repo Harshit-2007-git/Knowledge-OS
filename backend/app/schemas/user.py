@@ -24,4 +24,4 @@ class UserResponse(BaseModel):
 class UserUpdateRequest(BaseModel):
     full_name: Optional[str] = Field(None, max_length=255)
     bio: Optional[str] = None
-    avatar_url: Optional[str] = Field(None, max_length=500)
+    avatar_url: Optional[str] = Field(None, max_length=1000)

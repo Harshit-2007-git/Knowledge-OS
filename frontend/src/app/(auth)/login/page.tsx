@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,11 +21,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     try {
-      await login({ email, password });
+      await login(email, password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { detail?: string } } };
-      setError(axiosErr.response?.data?.detail || "Login failed. Please try again.");
+      const e = err as { message?: string; response?: { data?: { detail?: string } } };
+      setError(e.message || e.response?.data?.detail || "Login failed. Please try again.");
     }
   };
 
@@ -38,12 +39,12 @@ export default function LoginPage() {
       <Card className="w-full max-w-md relative z-10 border-border/40 bg-card/80 backdrop-blur-sm shadow-2xl animate-fade-in">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-primary-foreground glow">
-              <Brain className="w-6 h-6" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden shadow-lg">
+              <Image src="/logo.png" alt="Aethel" width={56} height={56} className="object-cover" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Knowledge OS account</CardDescription>
+          <CardDescription>Sign in to your Aethel account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

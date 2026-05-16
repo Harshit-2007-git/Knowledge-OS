@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Brain,
   Search,
   MessageSquare,
   Upload,
@@ -50,11 +50,11 @@ export default function LandingPage() {
       {/* ── Navigation ────────────────────────────────── */}
       <nav className="flex items-center justify-between px-6 lg:px-12 h-16 border-b border-border/30 glass sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground">
-            <Brain className="w-5 h-5" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden">
+            <Image src="/logo.png" alt="Aethel" width={36} height={36} className="object-cover" />
           </div>
           <span className="text-lg font-bold tracking-tight gradient-text">
-            Knowledge OS
+            Aethel
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -169,11 +169,11 @@ export default function LandingPage() {
       <footer className="px-6 lg:px-12 py-8 border-t border-border/20 mt-auto">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold">Knowledge OS</span>
+            <Image src="/logo.png" alt="Aethel" width={16} height={16} className="object-cover rounded" />
+            <span className="text-sm font-semibold">Aethel</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Enterprise AI Platform · Built for production
+            Enterprise AI RAG Platform · Built for production
           </p>
         </div>
       </footer>

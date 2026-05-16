@@ -18,14 +18,18 @@ _engine_kwargs: dict = {
 }
 
 if settings.IS_SQLITE:
-    # SQLite doesn't support pool_size / pool_recycle
     _engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
-    # PostgreSQL (Supabase) — NullPool is required when using
-    # Supabase's pgbouncer in transaction mode (port 6543)
+    # Supabase uses pgbouncer in transaction mode — must disable
+    # prepared statement cache, otherwise asyncpg throws
+    # DuplicatePreparedStatementError on every connection.
     from sqlalchemy.pool import NullPool
     _engine_kwargs.update({
         "poolclass": NullPool,
+        "connect_args": {
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        },
     })
 
 engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)

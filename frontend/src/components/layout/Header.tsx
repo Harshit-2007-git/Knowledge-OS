@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Sun, Moon, Bell, Search } from "lucide-react";
+import { Sun, Moon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,16 +28,6 @@ export function Header() {
 
       {/* Actions */}
       <div className="flex items-center gap-2 ml-4">
-        <Button
-          id="notifications-btn"
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 relative text-muted-foreground hover:text-foreground"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full animate-pulse" />
-        </Button>
-
         <Button
           id="theme-toggle"
           variant="ghost"

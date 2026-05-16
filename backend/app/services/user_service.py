@@ -21,10 +21,16 @@ class UserService:
             raise EntityNotFoundError("User", user_id)
         return user
 
+    async def delete_user(self, user_id: str) -> None:
+        user = await self.get_user_by_id(user_id)
+        await self.db.delete(user)
+        await self.db.commit()
+
     async def update_user(self, user_id: str, data: UserUpdateRequest) -> User:
         user = await self.get_user_by_id(user_id)
         update_data = data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(user, field, value)
-        await self.db.flush()
+        await self.db.commit()
+        await self.db.refresh(user)
         return user
