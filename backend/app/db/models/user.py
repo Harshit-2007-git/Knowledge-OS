@@ -16,7 +16,7 @@ class User(Base):
     )
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     role: Mapped[str] = mapped_column(
         String(50), default="user", server_default="user", nullable=False
     )
@@ -25,9 +25,9 @@ class User(Base):
     )
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Relationships
-    workspaces = relationship("Workspace", back_populates="owner", lazy="selectin")
-    conversations = relationship("Conversation", back_populates="user", lazy="selectin")
+    # Relationships — cascade ensures all user data is deleted with the user
+    workspaces = relationship("Workspace", back_populates="owner", lazy="selectin", cascade="all, delete-orphan")
+    conversations = relationship("Conversation", back_populates="user", lazy="selectin", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email}>"

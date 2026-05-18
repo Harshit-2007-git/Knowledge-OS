@@ -105,13 +105,19 @@ export default function ProfilePage() {
     const handleDeleteAccount = async () => {
         if (!userEmail || deleteConfirm !== userEmail) return;
         setDeleting(true);
+        setSaveError("");
         try {
             await api.delete("/users/me");
             logout();
             router.push("/login");
-        } catch {
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { detail?: string }; status?: number }; message?: string };
             setDeleting(false);
-            setSaveError("Failed to delete account. Please try again.");
+            setSaveError(
+                e.response?.data?.detail ||
+                e.message ||
+                `Delete failed (${e.response?.status || "network error"}). Check backend logs.`
+            );
         }
     };
 

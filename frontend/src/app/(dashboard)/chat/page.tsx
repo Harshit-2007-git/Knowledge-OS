@@ -35,15 +35,18 @@ export default function ChatPage() {
     enabled: !!selectedWorkspaceId,
   });
 
-  // Fetch current conversation messages
+  // Fetch current conversation messages — disabled during streaming
   const { data: conversationData } = useQuery({
     queryKey: ["conversation", currentConvId],
     queryFn: () => getConversation(currentConvId!),
-    enabled: !!currentConvId,
+    enabled: !!currentConvId && !isStreaming,
   });
 
+  const isStreamingRef = useRef(false);
+
   useEffect(() => {
-    if (conversationData?.messages) {
+    // Only load messages from server when NOT actively streaming
+    if (!isStreamingRef.current && conversationData?.messages) {
       setMessages(conversationData.messages);
     }
   }, [conversationData]);
@@ -85,6 +88,7 @@ export default function ChatPage() {
     }]);
 
     setIsStreaming(true);
+    isStreamingRef.current = true;
 
     try {
       const token = localStorage.getItem("access_token");
@@ -144,6 +148,11 @@ export default function ChatPage() {
       );
     } finally {
       setIsStreaming(false);
+      isStreamingRef.current = false;
+      // Now safe to refresh from server
+      if (currentConvId) {
+        queryClient.invalidateQueries({ queryKey: ["conversation", currentConvId] });
+      }
     }
   };
 

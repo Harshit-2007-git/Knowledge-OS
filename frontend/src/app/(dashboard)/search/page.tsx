@@ -23,9 +23,9 @@ export default function SearchPage() {
 
   useEffect(() => {
     api.get("/workspaces/").then((res) => {
-      setWorkspaces(res.data.items || res.data || []);
-      if (res.data.items?.length > 0) setSelectedWorkspace(res.data.items[0].id);
-      else if (res.data?.length > 0) setSelectedWorkspace(res.data[0].id);
+      const items = res.data.workspaces || res.data.items || res.data || [];
+      setWorkspaces(items);
+      if (items.length > 0) setSelectedWorkspace(items[0].id);
     }).catch(() => { });
   }, []);
 
@@ -36,8 +36,12 @@ export default function SearchPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim() || searchMutation.isPending || !selectedWorkspace) return;
-    searchMutation.mutate({ query, workspace_id: selectedWorkspace, top_k: 10 });
+    if (!query.trim() || searchMutation.isPending) return;
+    searchMutation.mutate({
+      query,
+      workspace_id: selectedWorkspace || (workspaces[0]?.id ?? ""),
+      top_k: 10
+    });
   };
 
   return (
@@ -82,7 +86,7 @@ export default function SearchPage() {
           type="submit"
           size="sm"
           className="absolute right-2 top-1/2 -translate-y-1/2 gap-1.5"
-          disabled={!query.trim() || searchMutation.isPending || !selectedWorkspace}
+          disabled={!query.trim() || searchMutation.isPending}
         >
           {searchMutation.isPending
             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
