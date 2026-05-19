@@ -28,3 +28,8 @@ node_modules/
 *.env
 backend/.env
 frontend/.env.local
+
+
+aethel-key.pem
+aethel-ai-backend/
+*.pem
