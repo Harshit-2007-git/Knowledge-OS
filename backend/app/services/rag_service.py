@@ -4,8 +4,6 @@ from sqlalchemy import select
 import datetime
 
 from app.db.models.conversation import Conversation, Message
-from app.vectorstore.chroma_client import get_or_create_collection as get_collection
-from app.ml.embeddings import get_embedding_model
 from app.ml.llm import get_llm_client
 
 logger = logging.getLogger(__name__)
@@ -43,34 +41,47 @@ class RAGService:
     async def retrieve_context(
         self, workspace_id: str, query: str, top_k: int = 5
     ) -> list[dict]:
-        collection = get_collection(workspace_id)
-        if not collection:
-            return []
+        """Search document chunks using PostgreSQL full-text search."""
+        from sqlalchemy import select, or_
+        from app.db.models.chunk import Chunk
+        from app.db.models.document import Document
 
-        model = get_embedding_model()
-        query_embedding = model.encode([query])[0].tolist()
+        keywords = [kw.strip() for kw in query.split() if len(kw.strip()) > 2]
+        if not keywords:
+            keywords = [query.strip()]
+
+        ilike_conditions = [Chunk.content.ilike(f"%{kw}%") for kw in keywords]
 
         try:
-            results = collection.query(
-                query_embeddings=[query_embedding],
-                n_results=top_k,
+            stmt = (
+                select(Chunk, Document.filename)
+                .join(Document, Chunk.document_id == Document.id)
+                .where(
+                    Document.workspace_id == workspace_id,
+                    Document.status == "completed",
+                    or_(*ilike_conditions),
+                )
+                .limit(top_k)
             )
+            result = await self.db.execute(stmt)
+            rows = result.all()
+
             contexts = []
-            if results["documents"] and len(results["documents"]) > 0:
-                for i, doc in enumerate(results["documents"][0]):
-                    metadata = results["metadatas"][0][i] if results["metadatas"] else {}
-                    contexts.append({
-                        "text": doc,
-                        "metadata": metadata,
-                        "distance": (
-                            results["distances"][0][i]
-                            if "distances" in results and results["distances"]
-                            else 0
-                        ),
-                    })
+            for chunk, filename in rows:
+                matched = sum(1 for kw in keywords if kw.lower() in chunk.content.lower())
+                score = matched / len(keywords) if keywords else 0
+                contexts.append({
+                    "text": chunk.content,
+                    "metadata": {
+                        "chunk_id": chunk.id,
+                        "document_id": chunk.document_id,
+                        "document_name": filename,
+                    },
+                    "distance": 1 - score,
+                })
             return contexts
         except Exception as e:
-            logger.error("ChromaDB search failed: %s", e)
+            logger.error("PostgreSQL search failed: %s", e)
             return []
 
     async def chat(

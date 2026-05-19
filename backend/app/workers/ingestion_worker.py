@@ -36,25 +36,8 @@ _embedding_model = None
 
 
 def _get_embedding_model():
-    """
-    Return the module-level SentenceTransformer, loading it on first call.
-    Thread-safe for read after the first load because GIL protects the assignment.
-    """
-    global _embedding_model
-    if _embedding_model is None:
-        from sentence_transformers import SentenceTransformer
-        from app.config import settings
-        logger.info(
-            "Loading embedding model '%s' on device '%s' (one-time startup cost)",
-            settings.EMBEDDING_MODEL,
-            settings.EMBEDDING_DEVICE,
-        )
-        _embedding_model = SentenceTransformer(
-            settings.EMBEDDING_MODEL,
-            device=settings.EMBEDDING_DEVICE,
-        )
-        logger.info("Embedding model loaded and cached.")
-    return _embedding_model
+    """Stub — embeddings not used, search uses PostgreSQL full-text."""
+    return None
 
 
 # ── Text extraction ────────────────────────────────────────────────────────────
@@ -129,15 +112,8 @@ def _generate_embeddings_sync(texts: list[str]):
     instance. Changing EMBEDDING_MODEL requires a server restart, which is
     the correct behaviour (you don't want hot-swapping mid-session anyway).
     """
-    model = _get_embedding_model()
-    from app.config import settings
-    logger.info("Generating embeddings for %d chunks", len(texts))
-    return model.encode(
-        texts,
-        batch_size=settings.EMBEDDING_BATCH_SIZE,
-        normalize_embeddings=True,
-        convert_to_numpy=True,
-    )
+    """Stub — returns zero vectors since search uses PostgreSQL full-text."""
+    return [[0.0] * 384 for _ in texts]
 
 
 # ── Main ingestion pipeline ────────────────────────────────────────────────────
